@@ -4,3 +4,6 @@ pillow
 numpy
 playwright
 playwright-stealth
+# 以下工具通过CLI调用，需单独安装：
+# pip install maigret          # 210+平台用户名枚举
+# pip install sherlock-project  # 400+平台用户名枚举（与maigret互补）

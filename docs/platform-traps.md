@@ -6,20 +6,39 @@
 
 | 平台 | 反爬方式 | 应对策略 |
 |------|----------|----------|
-| 百度 | CAPTCHA（滑块/点选） | 本地Playwright偶尔可用；Browser Use web_search绕过 |
-| 必应中国 | 偶发CAPTCHA | 本地Playwright可靠；Browser Use web_search绕过 |
+| 百度 | CAPTCHA（滑块/点选） | Playwright + stealth 偶尔可用 |
+| 必应中国 | 偶发CAPTCHA | Playwright + stealth 可靠 |
 | 搜狗 | 空结果 | 无解 |
 | 360搜索 | 较宽松 | 从服务器IP偶尔可用，但结果质量低 |
-| DuckDuckGo | 无CAPTCHA但中文结果差 | URL编码+HTML解析，成功率约50% |
+| DuckDuckGo HTML | 无CAPTCHA但中文结果差 | URL编码+requests直接请求，成功率约50% |
 | Yandex | CAPTCHA | 无解 |
+
+**DuckDuckGo HTML 搜索示例**（无需浏览器）：
+```python
+import requests, urllib.parse
+from bs4 import BeautifulSoup
+
+query = urllib.parse.quote("目标昵称")
+resp = requests.get(
+    f"https://html.duckduckgo.com/html/?q={query}",
+    headers={"User-Agent": "Mozilla/5.0"},
+    timeout=10
+)
+soup = BeautifulSoup(resp.text, 'html.parser')
+for r in soup.select('.result'):
+    title = r.select_one('.result__title a')
+    snippet = r.select_one('.result__snippet')
+    if title:
+        print(f"{title.text}: {snippet.text if snippet else ''}")
+```
 
 ## 社交平台类
 
 ### 微博 (m.weibo.cn)
 - **一次窗口**：首次页面加载成功，第二次必触发验证码
 - **防盗链**：sinaimg.cn图片直接下载返回403
-- **应对**：拦截API响应获取数据；page.screenshot()截图保存图片
-- **关键字段**：region_name（"发布于 XX"）是定位利器
+- **应对**：拦截API响应获取数据；`page.screenshot()` 截图保存图片
+- **关键字段**：`region_name`（"发布于 XX"）是定位利器
 
 ### 抖音 (douyin.com)
 - IP属地可见（如"陕西"）
@@ -30,7 +49,7 @@
 ### 小红书 (xiaohongshu.com)
 - 搜索功能完全需登录
 - API返回 `{"code":-1}`
-- 应对：Browser Use web_search搜 `site:xiaohongshu.com`
+- 应对：Playwright 搜索 Bing `site:xiaohongshu.com`
 
 ### B站 (bilibili.com)
 - **空间页面公开**：space.bilibili.com无需登录
@@ -56,7 +75,7 @@
 
 ## 通用反爬策略
 
-### Playwright + Stealth
+### Playwright + Stealth 配置
 ```python
 from playwright.async_api import async_playwright
 from playwright_stealth import Stealth
@@ -77,7 +96,7 @@ async def create_stealth_page(browser):
 - **换session** — 关闭浏览器重新启动
 - **一次窗口** — 拿到数据就停，不要贪心翻页
 
-### 请求频率
+### 请求频率建议
 - 单平台：每次请求间隔 ≥3秒
 - 搜索引擎：每分钟 ≤5次
 - 微博：只做一次，不要连续请求

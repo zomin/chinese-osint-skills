@@ -17,7 +17,7 @@ from datetime import datetime
 
 
 QQ_AVATAR_URL = "https://q1.qlogo.cn/g?b=qq&nk={qq}&s={size}"
-QZONE_AVATAR_URL = "http://qlogo3.store.qq.com/qzone/{qq}/{qq}/640"
+QZONE_AVATAR_URL = "https://qlogo3.store.qq.com/qzone/{qq}/{qq}/640"
 
 SIZE_MAP = {
     "40": 1,    # 40x40

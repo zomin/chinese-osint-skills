@@ -17,7 +17,7 @@
 |------|------|----------|
 | QQ资料获取 | CDN/API直取 | QQ、QQ空间 |
 | 用户名枚举 | Maigret + Sherlock | 610+ 国际平台 |
-| 社交媒体搜索 | Browser Use web_search | 抖音/微博/小红书/B站等 |
+| 社交媒体搜索 | Playwright + Bing/百度 | 抖音/微博/小红书/B站等 |
 | 微博内容抓取 | Playwright一次性窗口 | 微博（含region_name定位） |
 | 企业关联查询 | 搜索引擎快照 | 天眼查/爱企查 |
 | 手机号归属 | 离线号段解析 | 全国运营商 |
@@ -37,14 +37,14 @@
 # 核心工具
 pip install maigret sherlock-project
 
-# 浏览器自动化（可选，用于微博等平台）
+# 浏览器自动化（微博等平台抓取需要）
 pip install playwright playwright-stealth
 playwright install chromium
 
-# 头像分析（可选）
+# 头像分析
 pip install pillow numpy
 
-# HTTP请求
+# HTTP请求和HTML解析
 pip install requests beautifulsoup4
 ```
 
@@ -60,34 +60,35 @@ python scripts/qq_avatar.py --qq 123456789
 
 # 3. 头像分析（判断真人 vs 动漫）
 python scripts/avatar_analysis.py --image avatar.jpg
+python scripts/avatar_analysis.py --url "https://q1.qlogo.cn/g?b=qq&nk=123456789&s=640"
 
 # 4. 微博一次性窗口抓取
 python scripts/weibo_scraper.py --uid 1234567890
 
-# 5. 跨平台批量搜索
-python scripts/cross_platform_search.py --nickname "目标昵称"
+# 5. 跨平台批量搜索（Maigret + Sherlock + B站）
+python scripts/cross_platform_search.py --nickname "target_username"
 ```
 
 ## 搜索策略分层
 
 ```
-Tier 1  ━━  直接API（秒级，无需浏览器）
-           QQ头像 / 手机号归属
+Tier 1    ━━  直接API（秒级，无需浏览器）
+              QQ头像 / B站用户搜索 / 手机号归属
 
-Tier 2  ━━  搜索引擎（最有效，绕过反爬）
-           Browser Use web_search / Bing
+Tier 2    ━━  Playwright浏览器自动化（通用最有效）
+              Bing/百度搜索 / DuckDuckGo HTML
 
-Tier 2.5 ━  本地浏览器（一次性窗口）
-           微博 Playwright 抓取
+Tier 2.5  ━━  微博一次性窗口（首次加载有效）
+              Playwright + stealth 拦截API响应
 
-Tier 3  ━━  浏览器导航（中国域名受限）
-           需大陆IP / 登录态
+Tier 3    ━━  本地curl（几乎不可用）
+              全站CAPTCHA / 空结果
 
-Tier 4  ━━  本地curl（几乎不可用）
-           全站CAPTCHA / 空结果
+Tier 3.5  ━━  各平台直接访问
+              天眼查地理围栏 / 小红书需登录 / 抖音有限
 ```
 
-**核心原则**：永远从Tier 1开始，逐层下沉。不要在Tier 4浪费时间。
+**核心原则**：永远从Tier 1开始，逐层下沉。不要在Tier 3浪费时间。
 
 ## 项目结构
 
@@ -111,9 +112,10 @@ chinese-osint/
 
 ### ✅ 可靠的方法
 - QQ头像CDN无防盗链，直接URL可获取
-- Browser Use `web_search` 能绕过所有搜索引擎CAPTCHA
+- Playwright + stealth 可搜索 Bing/百度，绕过大部分CAPTCHA
 - 微博 `region_name` 字段是极强的定位信号
 - B站空间页面完全公开，无需登录
+- Maigret + Sherlock 可快速枚举610+平台
 
 ### ❌ 不要浪费时间的事
 - 本地curl任何中国搜索引擎 → 全CAPTCHA
@@ -122,17 +124,17 @@ chinese-osint/
 - 天眼查/爱企查从海外IP → 法律地理围栏，不可绕过
 - "番番寻客宝"企业关联 → 数据污染，不代表真实工作关系
 
-## 作为 Hermes Agent Skill 使用
+## 与 AI Agent 集成
 
-本项目原生兼容 [Hermes Agent](https://github.com/nousresearch/hermes-agent) 技能系统：
+本项目的 SKILL.md 可被 AI Agent 系统加载为技能指令：
 
+**Hermes Agent**：
 ```bash
-# 克隆到 Hermes skills 目录
-git clone https://github.com/YOUR_USERNAME/chinese-osint.git \
+git clone https://github.com/<username>/chinese-osint.git \
   ~/.hermes/skills/research/chinese-osint
 ```
 
-Hermes Agent 会自动加载 `SKILL.md` 并在需要OSINT搜索时调用。
+**其他 Agent**：将 SKILL.md 内容作为 system prompt 或知识库文档加载即可。
 
 ## 贡献指南
 
