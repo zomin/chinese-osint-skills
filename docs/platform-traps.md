@@ -41,7 +41,7 @@ for r in soup.select('.result'):
 - **关键字段**：`region_name`（"发布于 XX"）是定位利器
 
 ### 抖音 (douyin.com)
-- IP属地可见（如"陕西"）
+- IP属地可见（如"IP属地: XX省"）
 - 粉丝数/获赞数需登录
 - API返回 `{"aweme_list":null}`
 - 应对：搜索引擎 `site:douyin.com` 获取有限信息
