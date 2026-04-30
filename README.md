@@ -98,12 +98,17 @@ Tier 3.5  ━━  各平台直接访问
 ## 项目结构
 
 ```
-chinese-osint/
-├── SKILL.md                          # 核心技能文档（完整方法论）
+chinese-osint-skills/
+├── AGENTS.md                         # 通用标准（6+ 平台兼容）
+├── CLAUDE.md                         # Claude Code 专用
+├── SKILL.md                          # Hermes Agent 专用（含 frontmatter）
 ├── README.md                         # 本文件
 ├── LICENSE                           # MIT License
 ├── DISCLAIMER.md                     # 免责声明
+├── install.sh                        # 跨平台一键安装脚本
 ├── requirements.txt                  # Python依赖
+├── .github/
+│   └── copilot-instructions.md       # GitHub Copilot
 ├── scripts/
 │   ├── qq_avatar.py                  # QQ头像获取
 │   ├── qq_info.py                    # QQ详细信息（注册时间、等级、昵称）
@@ -132,15 +137,48 @@ chinese-osint/
 
 ## 与 AI Agent 集成
 
-本项目的 SKILL.md 可被 AI Agent 系统加载为技能指令：
+本项目原生支持 **8个主流 AI Agent 平台**，一份内容、一键安装。
 
-**Hermes Agent**：
+### 支持矩阵
+
+| 平台 | 加载文件 | 安装方式 |
+|------|----------|----------|
+| **Hermes Agent** | `SKILL.md` | `./install.sh hermes` |
+| **Claude Code** | `CLAUDE.md` / `~/.claude/rules/` | `./install.sh claude` |
+| **OpenCode** | `AGENTS.md` | `./install.sh opencode` |
+| **Cursor** | `.cursor/rules/*.mdc` | `./install.sh cursor` |
+| **Windsurf** | `.windsurf/rules/*.md` | `./install.sh windsurf` |
+| **Cline** | `.clinerules/*.md` | `./install.sh cline` |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | `./install.sh copilot` |
+| **Aider** | `CONVENTIONS.md` | `./install.sh aider` |
+
+### 一键安装
+
 ```bash
-git clone https://github.com/<username>/chinese-osint.git \
-  ~/.hermes/skills/research/chinese-osint
+# 克隆并安装
+git clone https://github.com/zomin/chinese-osint-skills.git
+cd chinese-osint-skills
+
+# 安装到指定平台
+./install.sh hermes       # Hermes Agent
+./install.sh claude       # Claude Code
+./install.sh all          # 全部平台
+
+# 远程一键安装（无需克隆）
+curl -sSL https://raw.githubusercontent.com/zomin/chinese-osint-skills/main/install.sh | bash -s -- hermes
 ```
 
-**其他 Agent**：将 SKILL.md 内容作为 system prompt 或知识库文档加载即可。
+### 文件说明
+
+| 文件 | 用途 |
+|------|------|
+| `SKILL.md` | Hermes Agent 专用（含 YAML frontmatter） |
+| `AGENTS.md` | 通用标准（无 frontmatter，6+ 平台兼容） |
+| `CLAUDE.md` | Claude Code 专用（含 HTML 注释头） |
+| `.github/copilot-instructions.md` | GitHub Copilot |
+| `install.sh` | 跨平台一键安装脚本 |
+
+> `AGENTS.md` 正在成为 AI Agent 的事实标准——OpenCode、Cursor、Windsurf、Cline、Copilot 均原生支持。
 
 ## 贡献指南
 
