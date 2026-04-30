@@ -16,6 +16,7 @@
 | 能力 | 方法 | 覆盖平台 |
 |------|------|----------|
 | QQ资料获取 | CDN/API直取 | QQ、QQ空间 |
+| QQ注册时间 | 第三方API + 号段估算 | 精确到秒 / 年份估算 |
 | 用户名枚举 | Maigret + Sherlock | 610+ 国际平台 |
 | 社交媒体搜索 | Playwright + Bing/百度 | 抖音/微博/小红书/B站等 |
 | 微博内容抓取 | Playwright一次性窗口 | 微博（含region_name定位） |
@@ -58,7 +59,11 @@ sherlock "target_username" --print-found
 # 2. QQ头像获取
 python scripts/qq_avatar.py --qq 123456789
 
-# 3. 头像分析（判断真人 vs 动漫）
+# 3. QQ详细信息（注册时间、等级、昵称）
+python scripts/qq_info.py --qq 123456789 --estimate    # 号段估算（无需key）
+python scripts/qq_info.py --qq 123456789 --key YOUR_KEY  # API精确查询
+
+# 4. 头像分析（判断真人 vs 动漫）
 python scripts/avatar_analysis.py --image avatar.jpg
 python scripts/avatar_analysis.py --url "https://q1.qlogo.cn/g?b=qq&nk=123456789&s=640"
 
@@ -101,6 +106,7 @@ chinese-osint/
 ├── requirements.txt                  # Python依赖
 ├── scripts/
 │   ├── qq_avatar.py                  # QQ头像获取
+│   ├── qq_info.py                    # QQ详细信息（注册时间、等级、昵称）
 │   ├── avatar_analysis.py            # 头像像素分析（真人/插画判断）
 │   ├── weibo_scraper.py              # 微博一次性窗口抓取
 │   └── cross_platform_search.py      # 跨平台用户名批量搜索
