@@ -12,11 +12,15 @@ Cross-Platform Username Search — 跨平台用户名批量搜索
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 import time
 import requests
 from datetime import datetime
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _codes import Exit, emit, force_utf8_streams  # noqa: E402  退出码契约与本脚本同目录
 
 
 def check_qq_avatar(qq: str) -> dict:
@@ -143,6 +147,7 @@ def run_sherlock(username: str) -> dict:
 
 
 def main():
+    force_utf8_streams()
     parser = argparse.ArgumentParser(description="跨平台用户名批量搜索")
     parser.add_argument("--nickname", required=True, help="目标用户名/昵称")
     parser.add_argument("--json", dest="json_output", help="结果保存为JSON")
@@ -213,6 +218,15 @@ def main():
             json.dump(results, f, ensure_ascii=False, indent=2)
         print(f"[+] 结果已保存: {args.json_output}")
 
+    # 退出码：有工具报错 → partial；全部工具报错 → upstream_error
+    errored = [t for t in results['tools'] if t.get('error')]
+    if errored and len(errored) == len(results['tools']):
+        return emit(
+            Exit.UPSTREAM_ERROR,
+            "所有数据源都失败：" + "; ".join(f"{t.get('platform')}={t.get('error')}" for t in errored),
+        )
+    return Exit.PARTIAL if errored else Exit.OK
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -16,16 +16,20 @@ Weibo One-Shot Scraper — 微博一次性窗口抓取
 import argparse
 import asyncio
 import json
+import os
 import sys
 from datetime import datetime
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _codes import Exit, emit, force_utf8_streams  # noqa: E402  退出码契约与本脚本同目录
 
 try:
     from playwright.async_api import async_playwright
     from playwright_stealth import Stealth
 except ImportError:
-    print("请安装依赖: pip install playwright playwright-stealth")
-    print("然后运行: playwright install chromium")
-    sys.exit(1)
+    sys.stderr.write("缺依赖：pip install playwright playwright-stealth\n")
+    sys.stderr.write("然后运行: playwright install chromium\n")
+    sys.exit(emit(Exit.DEPENDENCY_MISSING, "缺依赖：playwright / playwright-stealth"))
 
 
 WEIBO_MOBILE = "https://m.weibo.cn"
@@ -138,13 +142,15 @@ async def scrape_weibo(uid: str, output_path: str = None):
 
 
 def main():
+    force_utf8_streams()
     parser = argparse.ArgumentParser(description="微博一次性窗口抓取工具")
     parser.add_argument("--uid", required=True, help="微博用户UID")
     parser.add_argument("--output", help="输出JSON路径")
     args = parser.parse_args()
 
     asyncio.run(scrape_weibo(args.uid, args.output))
+    return Exit.OK
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

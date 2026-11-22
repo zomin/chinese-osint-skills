@@ -1,0 +1,33 @@
+{
+  "case": "format-and-checksum-failures",
+  "note": "三个反例：14 位 → level=format；末位校验位改错 → level=checksum 且 checksum_ok=false；15 位旧号 → level=format，只解释四条 caveat，不做升位推断。全部为合成号码。",
+  "args": [],
+  "ids": [
+    "11010519850312",
+    "110105198503121210",
+    "110105850312121"
+  ],
+  "expect": [
+    {
+      "input": "11010519850312",
+      "level": "format",
+      "valid_format": false,
+      "checksum_ok": null,
+      "address": null
+    },
+    {
+      "input": "110105198503121210",
+      "level": "checksum",
+      "valid_format": true,
+      "checksum_ok": false,
+      "address": null
+    },
+    {
+      "input": "110105850312121",
+      "level": "format",
+      "valid_format": false,
+      "checksum_ok": null,
+      "address": null
+    }
+  ]
+}

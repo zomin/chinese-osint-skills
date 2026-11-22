@@ -1,0 +1,25 @@
+# Python 字节码与缓存
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 测试 / 运行产物
+.pytest_cache/
+.mypy_cache/
+*.log
+
+# 本地数据文件（号段库、区划快照、夹具导出）
+# phone.dat 体积大且上游版本不一，按 CONTRIBUTING §2.2 不随仓库分发
+phone.dat
+*.xlsx
+*.csv
+
+# 编辑器 / 系统
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 环境与密钥
+.env
+.ai_key.json

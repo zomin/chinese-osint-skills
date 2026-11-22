@@ -1,0 +1,19 @@
+{
+  "case": "resolved-single-county",
+  "note": "110105 朝阳区在 2002-12 起的所有快照里都是同一个名字，窗口内只有一个候选，但区间开口于 latest 基线（2016-07 后未知），因此 confidence=medium。号码为合成号码。",
+  "args": [],
+  "ids": ["110105198503121218"],
+  "expect": [
+    {
+      "input": "110105198503121218",
+      "level": "ok",
+      "valid_format": true,
+      "checksum_ok": true,
+      "birth_date": "1985-03-12",
+      "sex": "M",
+      "address.status": "resolved",
+      "address.confidence": "medium",
+      "address.names": ["朝阳区"]
+    }
+  ]
+}

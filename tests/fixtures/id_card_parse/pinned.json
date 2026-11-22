@@ -1,0 +1,18 @@
+{
+  "case": "pinned-issue-year-collapses-ambiguity",
+  "note": "同一号码补上 --issue-year 2005 后，地址码被钉在 2005 年，只有新市区一个候选：status=resolved、confidence=high。这条说明'知道签发年份'比'扫窗口'更准，且脚本不会在不知道的时候假装知道。",
+  "args": ["--issue-year", "2005"],
+  "ids": ["130602198003121213"],
+  "expect": [
+    {
+      "input": "130602198003121213",
+      "level": "ok",
+      "address.status": "resolved",
+      "address.confidence": "high",
+      "address.names": ["新市区"],
+      "address.province": "河北省",
+      "address.city": "保定市",
+      "address.county": "新市区"
+    }
+  ]
+}

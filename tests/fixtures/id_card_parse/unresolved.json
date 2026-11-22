@@ -1,0 +1,15 @@
+{
+  "case": "unrecorded-old-code",
+  "note": "110223 是 2002 年前的通县籍代码（后为 110112 通州区），本地快照集不含该码：status=unresolved、confidence=low，warnings 里必须说明需要更早的快照集，而不是把号码判成假证。",
+  "args": [],
+  "ids": ["110223198503121216"],
+  "expect": [
+    {
+      "input": "110223198503121216",
+      "level": "address",
+      "address.status": "unresolved",
+      "address.confidence": "low",
+      "address.names": []
+    }
+  ]
+}

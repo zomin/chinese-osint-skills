@@ -21,7 +21,8 @@
 | 社交媒体搜索 | Playwright + Bing/百度 | 抖音/微博/小红书/B站等 |
 | 微博内容抓取 | Playwright一次性窗口 | 微博（含region_name定位） |
 | 企业关联查询 | 搜索引擎快照 | 天眼查/爱企查 |
-| 手机号归属 | 离线号段解析 | 全国运营商 |
+| 手机号归属 | 离线号段解析（phone.dat） | 全国运营商，含版本与携转 caveat |
+| 身份证解析 | GB 11643 校验 + 历史区划区间 | 省/市/区县候选、出生日期、性别 |
 | 头像分析 | PIL+numpy像素分析 | 判断真人/插画/动漫 |
 | 反向图片搜索 | 百度识图/Yandex | 跨平台头像溯源 |
 
@@ -72,6 +73,13 @@ python scripts/weibo_scraper.py --uid 1234567890
 
 # 5. 跨平台批量搜索（Maigret + Sherlock + B站）
 python scripts/cross_platform_search.py --nickname "target_username"
+
+# 6. 身份证解析（地址码按赋号年份查历史区划）
+python scripts/id_card_parse.py 11010519491231002X
+echo 130602198003121213 | python scripts/id_card_parse.py --issue-year 2005
+
+# 7. 手机号归属地（需自备 phone.dat）
+python scripts/phone_locate.py 13800138000 --db phone.dat
 ```
 
 ## 搜索策略分层
@@ -105,18 +113,29 @@ chinese-osint-skills/
 ├── README.md                         # 本文件
 ├── LICENSE                           # MIT License
 ├── DISCLAIMER.md                     # 免责声明
+├── CONTRIBUTING.md                   # 贡献指南
 ├── install.sh                        # 跨平台一键安装脚本
 ├── requirements.txt                  # Python依赖
 ├── .github/
 │   └── copilot-instructions.md       # GitHub Copilot
 ├── scripts/
+│   ├── _codes.py                     # 退出码契约（全脚本共用）
 │   ├── qq_avatar.py                  # QQ头像获取
 │   ├── qq_info.py                    # QQ详细信息（注册时间、等级、昵称）
 │   ├── avatar_analysis.py            # 头像像素分析（真人/插画判断）
 │   ├── weibo_scraper.py              # 微博一次性窗口抓取
-│   └── cross_platform_search.py      # 跨平台用户名批量搜索
-└── docs/
-    └── platform-traps.md             # 各平台反爬陷阱详解
+│   ├── cross_platform_search.py      # 跨平台用户名批量搜索
+│   ├── id_card_parse.py              # 身份证解析（GB 11643 + 历史区划）
+│   └── phone_locate.py               # 手机号归属地（phone.dat）
+├── docs/
+│   ├── platform-traps.md             # 各平台反爬陷阱详解
+│   ├── exit-codes.md                 # 退出码契约与重试策略
+│   ├── id-card.md                    # 身份证 18 位解析规范与历史区划问题
+│   └── public-records.md             # 官方公开源清单（按地址精度分级）
+└── tests/
+    ├── run-fixtures.py               # 标准库夹具 runner
+    ├── test_codes.py                 # 退出码契约单元测试
+    └── fixtures/                     # 合成数据夹具
 ```
 
 ## 关键发现（实战总结）
@@ -127,6 +146,7 @@ chinese-osint-skills/
 - 微博 `region_name` 字段是极强的定位信号
 - B站空间页面完全公开，无需登录
 - Maigret + Sherlock 可快速枚举610+平台
+- 身份证前 6 位是**赋号时**的县级区划，号码终身不变而区划一直在变
 
 ### ❌ 不要浪费时间的事
 - 本地curl任何中国搜索引擎 → 全CAPTCHA
@@ -134,6 +154,8 @@ chinese-osint-skills/
 - 微博连续请求 → 一次性窗口，第二次必定触发验证码
 - 天眼查/爱企查从海外IP → 法律地理围栏，不可绕过
 - "番番寻客宝"企业关联 → 数据污染，不代表真实工作关系
+- 用今天的行政区划表解二十年前赋的身份证号 → 必然解错（如 130602 已从新市区改为竞秀区）
+- 拿手机号归属地推断"此人现在在哪" → 2019 年携号转网后不成立
 
 ## 与 AI Agent 集成
 
@@ -190,7 +212,8 @@ curl -sSL https://raw.githubusercontent.com/zomin/chinese-osint-skills/main/inst
 4. **文档补充**：更多实战案例、陷阱记录
 5. **国际化**：英文文档翻译
 
-请阅读 [DISCLAIMER.md](DISCLAIMER.md) 后提交PR。
+请阅读 [DISCLAIMER.md](DISCLAIMER.md) 与 [CONTRIBUTING.md](CONTRIBUTING.md) 后提交 PR。
+注意：`AGENTS.md` / `CLAUDE.md` / `SKILL.md` / `.github/copilot-instructions.md` 是同一份正文的四个副本，改规则要四处同步。
 
 ## ⚠️ 免责声明
 

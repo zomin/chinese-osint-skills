@@ -1,0 +1,32 @@
+{
+  "case": "exact-utf8",
+  "note": "合成 5 条号段的 phone.dat（UTF-8 记录）：北京/北京/移动 与 广东/深圳/电信。号码与归属均为编造，仅用于验证解析与 JSONL 形状。",
+  "dat": {
+    "version": "2024",
+    "encoding": "utf-8",
+    "entries": [
+      { "prefix": 1380013, "record": "北京|北京|移动" },
+      { "prefix": 1990000, "record": "广东|深圳|电信" }
+    ]
+  },
+  "args": [],
+  "queries": ["13800138000", "+86 199-0000-1234"],
+  "expect_exit": 0,
+  "expect": [
+    {
+      "input": "13800138000",
+      "match": "exact",
+      "prefix": "1380013",
+      "attribution.province": "北京",
+      "attribution.city": "北京",
+      "attribution.carrier": "移动",
+      "dataVersion": "2024"
+    },
+    {
+      "input": "19900001234",
+      "match": "exact",
+      "attribution.city": "深圳",
+      "attribution.carrier": "电信"
+    }
+  ]
+}

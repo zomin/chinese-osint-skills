@@ -36,6 +36,9 @@ import os
 import sys
 from datetime import datetime
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _codes import Exit, emit, force_utf8_streams  # noqa: E402  退出码契约与本脚本同目录
+
 
 # ============ 号段估算（无需API） ============
 
@@ -62,9 +65,10 @@ def estimate_registration(qq: str) -> dict:
             period = p
             note = n
             break
-    elif digits >= 12:
-        period = "2015年以后"
-        note = "较新的QQ号"
+    else:
+        if digits >= 12:
+            period = "2015年以后"
+            note = "较新的QQ号"
 
     return {
         "qq": qq,
@@ -250,6 +254,7 @@ def print_result(result: dict):
 
 
 def main():
+    force_utf8_streams()
     parser = argparse.ArgumentParser(
         description="QQ信息查询工具（注册时间、等级、昵称等）",
         epilog="示例:\n"
@@ -267,6 +272,7 @@ def main():
     args = parser.parse_args()
 
     result = {}
+    status = Exit.OK
 
     # 号段估算
     if args.estimate:
@@ -278,6 +284,11 @@ def main():
         api_result = query_api(args.qq, args.key, args.api)
         print_result(api_result)
         result = api_result
+        error = str(api_result.get("error") or "")
+        if error:
+            status = (
+                Exit.NOT_AUTHENTICATED if "API key" in error else Exit.UPSTREAM_ERROR
+            )
 
     # 头像
     if args.avatar:
@@ -291,6 +302,8 @@ def main():
             json.dump(result, f, ensure_ascii=False, indent=2)
         print(f"\n[+] 结果已保存: {args.json_output}")
 
+    return status
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

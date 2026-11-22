@@ -1,0 +1,14 @@
+{
+  "case": "truncated-database",
+  "note": "把索引区砍掉 4 字节（索引区长度不再是 9 的整数倍）：脚本必须 exit=17（dependency_missing）并在 stderr 说明文件可能被截断，而不是返回空结果或猜一条记录。",
+  "dat": {
+    "version": "2024",
+    "encoding": "utf-8",
+    "truncateBytes": 4,
+    "entries": [{ "prefix": 1380013, "record": "北京|北京|移动" }]
+  },
+  "args": [],
+  "queries": ["13800138000"],
+  "expect_exit": 17,
+  "expect": []
+}

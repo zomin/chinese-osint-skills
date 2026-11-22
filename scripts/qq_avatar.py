@@ -11,9 +11,13 @@ QQ Avatar Fetcher — 获取QQ头像并提取元数据
 """
 
 import argparse
+import os
 import requests
 import sys
 from datetime import datetime
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _codes import Exit, emit, force_utf8_streams  # noqa: E402  退出码契约与本脚本同目录
 
 
 QQ_AVATAR_URL = "https://q1.qlogo.cn/g?b=qq&nk={qq}&s={size}"
@@ -90,6 +94,7 @@ def fetch_qzone_avatar(qq: str, save_path: str = None):
 
 
 def main():
+    force_utf8_streams()
     parser = argparse.ArgumentParser(description="QQ头像获取工具")
     parser.add_argument("--qq", required=True, help="QQ号")
     parser.add_argument("--size", default="640", choices=["40", "100", "140", "640"], help="头像尺寸")
@@ -97,11 +102,13 @@ def main():
     parser.add_argument("--qzone", action="store_true", help="同时获取QQ空间头像")
     args = parser.parse_args()
 
-    fetch_qq_avatar(args.qq, args.size, args.save)
+    ok = fetch_qq_avatar(args.qq, args.size, args.save)
 
     if args.qzone:
-        fetch_qzone_avatar(args.qq)
+        ok = fetch_qzone_avatar(args.qq) and ok
+
+    return Exit.OK if ok else Exit.PARTIAL
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

@@ -1,0 +1,21 @@
+{
+  "case": "gbk-records",
+  "note": "同一批号段但记录为 GBK 编码（部分构建产物如此）。解码顺序 UTF-8 → GBK → latin-1，必须在 GBK 上正常出中文而不是乱码或报错。",
+  "dat": {
+    "version": "2023",
+    "encoding": "gbk",
+    "entries": [{ "prefix": 1380013, "record": "北京|北京|移动" }]
+  },
+  "args": [],
+  "queries": ["13800138000"],
+  "expect_exit": 0,
+  "expect": [
+    {
+      "input": "13800138000",
+      "match": "exact",
+      "attribution.province": "北京",
+      "attribution.carrier": "移动",
+      "dataVersion": "2023"
+    }
+  ]
+}

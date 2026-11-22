@@ -1,4 +1,3 @@
-
 # Chinese OSINT — 国内人员数字足迹搜索
 
 根据有限信息（姓名、手机号、QQ号、昵称等）在中国互联网上查找特定人员的公开信息。
@@ -17,7 +16,8 @@
 | QQ空间头像 | `https://qlogo3.store.qq.com/qzone/{QQ号}/{QQ号}/640` | 可能与QQ头像不同 |
 | QQ空间可见性 | 尝试访问空间URL，封闭则需登录 | 封闭=完全无法获取内容 |
 | QQ注册时间 | 第三方API（见下方详解） | 免费API可精确到秒，号段估算可到年份 |
-| 手机号归属 | 前3位=运营商，前4-7位=城市段 | 无需API，对照表即可 |
+| 手机号归属 | `scripts/phone_locate.py --db phone.dat` | 离线号段库需自备，输出含版本与携转 caveat |
+| 身份证解析 | `scripts/id_card_parse.py` | 地址码按赋号年份查历史区划，见下节 |
 | B站用户搜索 | `api.bilibili.com/x/web-interface/search/type` | 需先访问首页获取cookie |
 
 **QQ注册时间查询（两种方式）**：
@@ -54,6 +54,34 @@ python scripts/qq_info.py --qq 123456789
 ```bash
 python scripts/qq_avatar.py --qq 123456789
 ```
+
+#### 号码类解析（离线，Tier 1 内）
+
+**身份证 → 户籍区县候选**
+
+```bash
+python scripts/id_card_parse.py 11010519491231002X
+echo 130602198003121213 | python scripts/id_card_parse.py --issue-year 2005
+```
+
+- 18 位 = 6 地址码 + 8 出生日期 + 3 顺序码（末位奇偶定性别）+ 1 校验位
+- **地址码是赋号当时的县级区划，号码终身不变而区划一直在变**。同一码在不同年份可能指向
+  不同区县（如 `130602` 2014-10 前是新市区、2015-09 起是竞秀区），所以脚本返回
+  `candidates[]` 候选集合，不知道签发年份时 `status=ambiguous`、`confidence=low`
+- 纯算法**拿不到**姓名、现住址、现户籍地、籍贯；校验位不符时不解释地址码
+- 规范与边界见 `docs/id-card.md`；内置区划快照覆盖 2002-12 至 2016-07，2017 年后
+  签发的证件只能判到 latest 基线
+
+**手机号 → 发卡时归属地**
+
+```bash
+python scripts/phone_locate.py 13800138000 --db phone.dat
+```
+
+- 号段库（`phone.dat`）不随仓库分发，使用者自备
+- 输出的是**发卡时**的省/市/运营商。2019-11-27 携号转网全国商用后，号码可以换运营商、
+  跨省迁转，因此不能据此推断"此人现在在哪"
+- 号段不在库里时返回 `match=none`，不回退相邻号段
 
 ### Tier 2：本地 Playwright 浏览器自动化（**通用最有效方式**）
 
@@ -192,7 +220,19 @@ skin_pct = ((arr[:,:,0]>150)&(arr[:,:,0]<255)&(arr[:,:,1]>80)&(arr[:,:,1]<200)&(
 edge_intensity = np.array(img.filter(ImageFilter.FIND_EDGES)).mean()  # >8≈照片细节
 ```
 
-### 2. QQ昵称GBK编码Bug
+### 2. 身份证地址码必须按赋号年份查历史区划
+
+用今天的行政区划表解二十年前赋的号，会得到一个**看起来像地址的错误答案**：
+
+| 码 | 2002-12 起 | 之后 |
+|---|---|---|
+| `130602` | 河北省保定市新市区 | 2015-09 起为竞秀区 |
+| `310108` | 上海市闸北区 | 2015-09 并入静安区 |
+
+判断口径：只有知道（或能约束）**签发年份**才能定到单一区县。常见约束是出生年 +16 至 +40 的
+发证窗口；窗口内跨了区划调整就只能是候选集合。
+
+### 3. QQ昵称GBK编码Bug
 
 ```python
 # users.qzone.qq.com 返回的昵称数据编码混乱
@@ -202,13 +242,13 @@ edge_intensity = np.array(img.filter(ImageFilter.FIND_EDGES)).mean()  # >8≈照
 # 解决：对原始bytes分别用 UTF-8 和 GBK 解码，取可读部分拼合
 ```
 
-### 3. Vision API 误判真实照片
+### 4. Vision API 误判真实照片
 
 - 街拍/时尚照片经常被误判为"二次元动漫风"
 - **不能依赖视觉AI判断头像是否真人**
 - 必须由人工确认
 
-### 4. XLSX解析（无openpyxl时）
+### 5. XLSX解析（无openpyxl时）
 
 ```python
 import zipfile, xml.etree.ElementTree as ET
@@ -223,7 +263,7 @@ for si in root.findall(f'{ns}si'):
         strings.append(t.text or '')
 ```
 
-### 5. **同名同姓极度常见**
+### 6. **同名同姓极度常见**
 
 - 常见昵称在多个平台可能有多人使用
 - **生日是最佳区分因子**
@@ -237,9 +277,11 @@ for si in root.findall(f'{ns}si'):
 1. QQ号 → 头像+空间可见性（Tier 1 API直接获取）
 2. 昵称 → 用昵称跑sherlock+maigret批量枚举平台，再用搜索引擎搜抖音/小红书/微博
 3. 姓名+城市 → Playwright搜索Bing/百度、查天眼查快照（Tier 2）
-4. 手机号 → 确认归属地+企业关联搜索（注意：多为数据污染，不代表真实工作关系）
-5. Wayback Machine → CDX API查历史快照（成功率低，可跳过）
-6. 交叉验证 → 用生日/城市/教育/年龄排除同名同姓
+4. 手机号 → `scripts/phone_locate.py` 确认发卡归属地 + 企业关联搜索（注意：多为数据污染，
+   不代表真实工作关系；携号转网后归属地≠当前所在地）
+5. 身份证 → `scripts/id_card_parse.py` 拿出生日期/性别/户籍区县候选，作为同名排除的锚点
+6. Wayback Machine → CDX API查历史快照（成功率低，可跳过）
+7. 交叉验证 → 用生日/城市/教育/年龄排除同名同姓
 ```
 
 ### QQ昵称提取实战经验
@@ -326,6 +368,29 @@ curl -s "https://api.bilibili.com/x/web-interface/card?mid=<mid>" \
 | 看准网 | kanzhun.com | 公司+员工信息 |
 | 闲鱼 | goofish.com | 二手交易，暴露位置 |
 | 搜狗微信 | weixin.sogou.com | 搜公众号文章 |
+
+## 脚本退出码契约
+`scripts/` 下所有脚本共用 `scripts/_codes.py` 的退出码表，完整规范见 `docs/exit-codes.md`：
+
+| 码 | 契约名 | 含义 |
+|---:|---|---|
+| 0 | `ok` | 全部成功 |
+| 2 | `usage` | 参数或输入不合法（与 argparse 对齐） |
+| 3 | `partial` | 有结果，但有坏数据或未命中项 |
+| 10 | `not_authenticated` | 缺 cookie / token / API key |
+| 11 | `verification_required` | 验证码、人机校验、风控页（461 / 471 / 412） |
+| 12 | `rate_limited` | 频率限制（429） |
+| 13 | `ip_blocked` | 地域或 IP 黑名单 |
+| 14 | `signature_error` | 签名失败（`x-s` / `a_bogus` / `w_rid` / `-799`） |
+| 15 | `unsupported` | 接口不存在或平台不支持 |
+| 16 | `upstream_error` | 5xx，或回 200 但 body 是 HTML 风控页 |
+| 17 | `dependency_missing` | 缺第三方包、缺数据文件或文件损坏 |
+
+三条必须记住：
+
+- **不要用 `exit 1`**。1 = 未分类，出现即说明没接契约；失败一律走 `_codes.Exit` 与 `emit()`（stderr 单行 JSON）。
+- **进程码只判「输入能不能被解析」**。地址没定位到区县、归属地未命中都不算失败，不确定性写进 record 的 `level` / `warnings[]` / `confidence.level`；批处理里一条坏数据回 `3` 而不是崩。
+- **可重试的只有 12 / 13 / 16**。对 11（验证码 / 风控）连击会把 IP 直接打进黑名单。
 
 ## 环境依赖
 - **Playwright + playwright-stealth**（推荐，核心浏览器自动化工具）

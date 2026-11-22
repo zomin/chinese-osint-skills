@@ -13,14 +13,17 @@ Avatar Analysis — 通过像素分析判断头像类型（真人照片 / 插画
 """
 
 import argparse
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from _codes import Exit, emit, force_utf8_streams  # noqa: E402  退出码契约与本脚本同目录
 
 try:
     from PIL import Image, ImageFilter
     import numpy as np
 except ImportError:
-    print("请安装依赖: pip install pillow numpy")
-    sys.exit(1)
+    sys.exit(emit(Exit.DEPENDENCY_MISSING, "缺依赖：pip install pillow numpy"))
 
 
 def analyze_avatar(image_path: str = None, image_url: str = None):
@@ -123,14 +126,19 @@ def analyze_avatar(image_path: str = None, image_url: str = None):
 
 
 def main():
+    force_utf8_streams()
     parser = argparse.ArgumentParser(description="头像类型分析工具")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--image", help="本地图片路径")
     group.add_argument("--url", help="图片URL")
     args = parser.parse_args()
 
-    analyze_avatar(image_path=args.image, image_url=args.url)
+    try:
+        analyze_avatar(image_path=args.image, image_url=args.url)
+    except Exception as exc:
+        return emit(Exit.UPSTREAM_ERROR, f"拉取或解析图片失败：{exc}")
+    return Exit.OK
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

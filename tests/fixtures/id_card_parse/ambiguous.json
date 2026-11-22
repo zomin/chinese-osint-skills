@@ -1,0 +1,15 @@
+{
+  "case": "ambiguous-same-code-two-counties",
+  "note": "130602 在窗口 1980—2020 内先叫新市区（2002-12..2014-10）、2015-09 起为竞秀区；两个候选都必须出现在结果里，status=ambiguous、confidence=low，脚本不得替你挑一个。号码为合成号码。",
+  "args": [],
+  "ids": ["130602198003121213"],
+  "expect": [
+    {
+      "input": "130602198003121213",
+      "level": "address",
+      "address.status": "ambiguous",
+      "address.confidence": "low",
+      "address.names": ["新市区", "竞秀区"]
+    }
+  ]
+}
